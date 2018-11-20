@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+{% load static %}
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{% static 'mycss.css' %}">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+</head>
+<body>
+<div class="container-fluid">
+    <div class="navbar nav-responsive">
+            <nav class="navbar navbar-inverse" style="background-color: maroon">
+              <div class="container-fluid">
+                    <div class="navbar-header">
+                      <a class="navbar-brand" href="#"><span class="glyphicon glyphicon-user"></span>{{request.user}}</a>
+                    </div>
+                    <ul class="nav navbar-nav">
+                        <li><a href="#"><span class="glyphicon glyphicon-envelope"></span> CONTACT: bisola_akin@yahoo.com</a></li>
+                    </ul>
+
+              </div>
+            </nav>
+        </div>
+
+    <div class="row">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <div class="well" >
+                <p> <h3>Welcome !!</h3></p>
+                <hr>
+                <p>Functions you may need for this calculation have bee evaluated as in the table below</p>
+
+            <div class="row paddedleft paddedtopbot" style="background-color:Silver;">
+                <table class="table, table-responsive table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <td><b>Name</b></td>
+                            <td><b>Description</b></td>
+                            <td><b>Expression</b></td>
+                            <td><b>Current Evaluation</b></td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in  c.frommodel.qs %}
+                            <tr>
+                                <td>{{ item.name}}</td>
+                                <td>{{item.description}}</td>
+                                <td>{{ item.function}}</td>
+                                <td>
+                                    {% for k, v in c.frommodel.result_dict.items %}
+                                        {%  if k == item.name %}
+                                            {{v}}
+                                        {% endif %}
+                                    {%endfor%}
+                                </td>
+                            </tr>
+                        {%  endfor %}
+                    </tbody>
+
+                </table>
+</div>
+
+
+        <div class="paddedleft paddedtop">
+
+            <div class="form-group" id="formdiv">
+                <form method="post" id="form">
+                     {% csrf_token %}
+                    <input name="eqn" id="eqn" type="text" placeholder="Enter an Equation here to evaluate" pattern="[\w-_]+" >
+                    <button class="btn btn-xs btn-default" type="submit" name="submit" id="evaluate" value="Evaluate">Evaluate</button>
+                </form>
+            </div>
+            <div class="result" style="display: none;">
+                <hr>
+                <h4>Result</h4>
+                    <hr>
+
+                <div id="outputdiv" >
+                    <h5 id="result" > </h5>
+                    <hr>
+                </div>
+
+                <div>
+                    <button class="btn btn-xs btn-default pull-right" type="submit" name="newcalc" id="newcalc" value="Newcalc">New Calculation</button>
+                </div>
+
+                <hr>
+            </div>
+
+        </div>
+        </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+
+        </div>
+
+    </div>
+
+</div>
+<Script type="text/javascript">
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$('#form').submit(function(e){
+        e.preventDefault();
+        var eqn = $('#eqn').val();
+        if(eqn===''){
+        alert('Please Provide a valid Input');
+        return
+         }
+        $.ajax({
+            url: 'evaluate_input',
+            type: "POST",
+            data: $('#form').serialize(),
+            dataType: 'json',
+            success: function (data) {
+                ndata=(jQuery.parseJSON(data));
+                {#alert(ndata.soln);#}
+                $('.result').show();
+                $('#result').text(ndata.soln);
+                $('#outputdiv').addClass("mysuccessdiv");
+                $('#formdiv').hide();
+            },
+            error: function (output) {
+                $('result').show();
+                $('#result').text('Error Calculating, please contact our team');
+                $('#outputdiv').addClass("myerrordiv");
+                $('#formdiv').hide();
+            }
+        });
+        });
+
+
+
+$('#newcalc').click(function(){
+    $('#result').text('');
+    $('.result').hide();
+    $('#formdiv').show();
+    $('#evaluate').show();
+    $('#eqn').val('');
+    });
+
+$('.table').draggable();
+</Script>
+
+</body>

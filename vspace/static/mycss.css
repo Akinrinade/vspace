@@ -1,0 +1,29 @@
+h5{
+    color:darkblue;
+}
+.result{
+    background:ghostwhite;
+}
+.mysuccessdiv{
+    height:auto;
+    width: auto;
+    background: lightgreen;
+    text-align:left;
+    font-weight: bold;
+    resize: both;
+}
+
+.myerrordiv{
+    height:auto;
+    width: auto;
+    background: lightgreen;
+    text-align:left;
+    resize: both;
+}
+.paddedleft{
+    padding-left: 20px;
+}
+.paddedtopbot{
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
