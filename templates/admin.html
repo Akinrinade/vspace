@@ -1,0 +1,261 @@
+
+
+{%  extends 'valibase.html' %}
+
+{% block content %}
+
+     <div class="col-md-4 ">
+            <div class="well" style="overflow: auto">
+                <h3>Hello Admin !!</h3>
+                <hr>
+                <p>Functions you may need for this calculation have bee evaluated as in the table below</p>
+
+            <div class="paddedleft paddedtopbot"  style="background-color:Silver;">
+                <table class="table, table-responsive table-striped table-bordered">
+                    <thead>
+                        <tr>
+                            <td><b>  Name  </b></td>
+                            <td><b>  Description  </b></td>
+                            <td><b>  Expression  </b></td>
+                             <td><b>  Parameters  </b></td>
+
+                            <td><b>  Current Evaluation  </b></td>
+                            <td><b> </b></td>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tablebody">
+{#                        {% for item in  c.frommodel.qs %}#}
+{#                            <tr>#}
+{#                                <td class="edit" id={{ item.id }}> <span class="glyphicon glyphicon-pencil"></span><a id="name_{{ item.id }}" href="#">{{ item.name}}</td></td>#}
+{#                                <td id="desc_{{ item.id }}">{{item.description}}</td>#}
+{#                                <td id="fun_{{ item.id }}" >{{ item.function}}</td>#}
+{#                                <td id="param_{{ item.id }}" >{{ item.parameters}}</td>#}
+{#                                <td>#}
+{#                                    {% for k, v in c.frommodel.result_dict.items %}#}
+{#                                        {%  if k == item.name %}#}
+{#                                            {{v}}#}
+{#                                        {% endif %}#}
+{#                                    {%endfor%}#}
+{#                                </td>#}
+{#                            </tr>#}
+{#                        {%  endfor %}#}
+                    </tbody>
+
+                </table>
+
+            </div>
+             <div class="paddedleft paddedtopbot">
+                <button class="btn btn-xs btn-outline-primary pull-right" type="submit" name="addnew" id="addnew" value="addnew"><span class="glyphicon glyphicon-plus"></span>Add New</button>
+                 <button class="hide btn btn-xs btn-outline-primary pull-right" type="submit" name="submit" id="cancel"><span class="glyphicon glyphicon-remove"></span>Cancel</button>
+            </div>
+        <hr>
+        <div class="paddedleft paddedtopbot">
+
+            <div class=" hide" id="hide">
+
+                <form method="post" id="form">
+                     {% csrf_token %}
+                    <div class="form-group col-xs-8">
+                        <input class="form-control" name="eqn" id="eqn" type="text" placeholder="Name" pattern="[\w-_]+" >
+                    </div>
+                    <div class="form-group col-xs-8">
+                        <input class="form-control" name="desc" id="desc" type="text" placeholder="Description"  >
+                    </div>
+                    <div class="form-group col-xs-8">
+                        <input class="form-control" name="fun" id="fun" type="text" placeholder="Function" >
+                    </div>
+                    <div class="form-group col-xs-8">
+                        <input class="form-control" name="param" id="param" type="text" placeholder="Parameters" >
+                    </div>
+                    <div class="form-group col-xs-8">
+                        <button class="btn btn-xs btn-outline-primary pull-right" type="submit" name="submit" id="save"><span class="glyphicon glyphicon-save"></span>Save</button>
+                     <hr>
+                    </div>
+                </form>
+
+            </div>
+
+
+        </div>
+
+        </div>
+
+        </div>
+
+
+
+    <script type=text/javascript>
+    var showform = false;
+    var fun = {{fun}};
+
+    function const_table(mylist) {
+    $.each(mylist, function (key, value) {
+        console.log(value);
+        id= value.pk;
+        value=value.fields;
+
+        $('#tablebody').append(
+            '<tr> <td class="edit" id='+id + '> <span class="glyphicon glyphicon-pencil">' +
+            '</span><a name="name_'+id +'" id="name_' +id + '" href="#">' + value.name + '</td></td>' +
+            '<td id="desc_' + id + '">' + value.description + '</td> ' +
+            '<td id="fun_' + id + '" >' + value.function + '</td>' +
+            '<td id="param_' + id + '" >' + value.parameters + '</td>'+
+            '<td id="currval_' +id + '" >' + value.current_value + '</td>'+
+            '<td id="delete_' +id + '" data_id='+id+'><botton class="btn btn-xs btn-danger">Delete</button></td></tr>'
+        );
+
+    });
+}
+
+const_table(fun);
+
+
+    $('#tablebody').on('click', "[class^='edit']", function(e){
+        e.preventDefault();
+         if (!showform){
+            var id = $(this).attr('id');
+
+            var name = $('#name_'+id ).text();
+            var desc =  $('#desc_'+id ).text();
+            var fun =  $('#fun_'+id ).text();
+            var param =  $('#param_'+ id ).text();
+            {#alert(name +',' +desc + ',' +fun +',' +param);#}
+
+            $('#hide').removeClass('hide').addClass('show');
+            $('#cancel').removeClass('hide').addClass('show');
+            $('#eqn' ).val(name);
+            $('#desc' ).val(desc);
+            $('#fun' ).val(fun);
+            $('#param' ).val(param);
+            $('#addnew').hide();
+            showform=true
+        }
+        else{
+            alert('Form is open');
+        }
+    });
+
+     $('#tablebody').on('click', "[id^='delete']", function(e) {
+         e.preventDefault();
+         var id = $(this).attr('data_id');
+         console.log(id);
+         $.ajax({
+             url: 'admin',
+             type: "POST",
+             data: "id="+id+"&action='delete'",
+             dataType: 'json',
+             success: function (data) {
+                 console.log(data.fun);
+                 fun = data.fun;
+                 $('#tablebody').empty();
+                 const_table($.parseJSON(data.fun));
+
+             },
+             error: function (output) {
+                 $('result').show();
+                 $('#result').text('Error Saving, please contact our team');
+                 $('#outputdiv').addClass("myerrordiv");
+                 $('#hide').hide();
+             }
+
+
+         });
+     });
+
+
+    $('#addnew').click(function(){
+        if (!showform) {
+            $('#hide').removeClass('hide').addClass('show');
+            $(this).hide();
+            $('#cancel').removeClass('hide').addClass('show');
+            showform = true
+        }
+        else{
+            alert ('form is open');
+
+        }
+
+
+    });
+     $('#cancel').click(function(){
+        $('#hide').removeClass('show').addClass('hide');
+        $(this).removeClass('show').addClass('hide');
+        $("form").each(function(){ this.reset() });
+        $('#addnew').show();
+        showform=false
+
+    });
+
+
+    function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+var csrftoken = getCookie('csrftoken');
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+$('#form').submit(function(e){
+        e.preventDefault();
+        var eqn = $('#eqn').val();
+        var desc = $('#desc' ).val();
+        var fun = $('#fun' ).val();
+        console.log (eqn, desc, fun);
+        console.log($('#form').serialize());
+        if(eqn===''||desc===''||fun===''){
+        alert('Please Provide a valid Input');
+        return;
+         }
+        $.ajax({
+            url: 'admin',
+            type: "POST",
+            data: $('#form').serialize(),
+
+            dataType: 'json',
+            success: function (data) {
+                console.log(data.fun);
+                {#fun=data.fun;#}
+                $('#tablebody').empty();
+                  const_table($.parseJSON(data.fun));
+                $('#hide').addClass('hide').removeClass('show');
+                 showform = false;
+                 $("form").each(function(){ this.reset() });
+                 $('#cancel').removeClass('show').addClass('hide');
+                $('#addnew').show();
+            },
+            error: function (output) {
+
+                $('#result').text('Error Saving, please contact our team');
+                $('#outputdiv').addClass("myerrordiv");
+                $('#hide').hide();
+            }
+        });
+        });
+
+
+
+    </script>
+
+{% endblock %}
